@@ -18,13 +18,13 @@ const preparedUpload = await uploader.prepareUpload("avatar", {
 ```
 
 `@marinedotsh/upload-sdk` validates client-reported file information, creates safe storage
-keys, and returns short-lived multipart upload targets for AWS S3 and ImageKit.
+keys, and returns short-lived multipart upload targets for AWS S3, ImageKit, and Neon Object Storage.
 
 - Typed storage profiles and upload assets
 - Provider-agnostic `prepareUpload()` flow
 - Filename, MIME type, extension, and size validation
 - Collision-resistant storage keys
-- Signed S3 POST policies and ImageKit V2 upload tokens
+- Signed S3 POST policies (AWS S3 and Neon Object Storage) and ImageKit V2 upload tokens
 - Consistent SDK errors for validation and provider failures
 
 ## Installation
@@ -185,6 +185,27 @@ imageKit({
 ImageKit uploads use a V2 upload JWT. The SDK maps asset rules into ImageKit upload
 checks for file size and MIME type where supported.
 
+### Neon Object Storage
+
+```ts
+import { neonStorage } from "@marinedotsh/upload-sdk/providers";
+
+neonStorage({
+  bucket: process.env.NEON_STORAGE_BUCKET!,
+  endpoint: process.env.AWS_ENDPOINT_URL_S3!,
+  region: process.env.AWS_REGION!,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+});
+```
+
+Neon Object Storage is S3-compatible, so uploads use the same signed POST policy as S3,
+addressed path-style at `{endpoint}/{bucket}`. Use a Neon credential with the `storage:write`
+scope; `neon env pull` writes the endpoint, region, and keys for the linked branch. Large-file
+multipart uploads are supported too.
+
 ## Validation model
 
 Upload SDK validates information reported by the client before it asks a provider to sign
@@ -209,7 +230,7 @@ import {
 ```
 
 ```ts
-import { awsS3, imageKit } from "@marinedotsh/upload-sdk/providers";
+import { awsS3, imageKit, neonStorage } from "@marinedotsh/upload-sdk/providers";
 ```
 
 Common types:
@@ -233,7 +254,7 @@ This repo is a pnpm workspace managed with Turbo.
 | Path | Description |
 | --- | --- |
 | `packages/upload-sdk` | Published SDK package |
-| `packages/upload-sdk/src/providers` | AWS S3 and ImageKit provider implementations |
+| `packages/upload-sdk/src/providers` | AWS S3, ImageKit, and Neon Object Storage provider implementations |
 | `packages/upload-sdk/src/validation` | Input, key, filename, duration, and size validation |
 | `apps/demo` | Next.js demo application |
 | `apps/docs` | Fumadocs documentation site |
@@ -262,6 +283,7 @@ pnpm --filter @marinedotsh/upload-sdk publish:check
 - [Quick start](https://upload-sdk.dev/docs/getting-started/quick-start)
 - [AWS S3 provider](https://upload-sdk.dev/docs/providers/aws-s3)
 - [ImageKit provider](https://upload-sdk.dev/docs/providers/imagekit)
+- [Neon Object Storage provider](https://upload-sdk.dev/docs/providers/neon-object-storage)
 - [Direct upload architecture](https://upload-sdk.dev/docs/resources/direct-upload-architecture)
 
 ## License

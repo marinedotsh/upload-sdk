@@ -63,3 +63,22 @@ export const ImageKitLogo = ({ size = 24, className, ...props }: LogoProps) => {
     </svg>
   );
 };
+
+export const NeonLogo = ({ size = 24, className, ...props }: LogoProps) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 31.3 31.6"
+      width={size}
+      height={size}
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M31.3,0v31.6l-12.2-10.6v10.6H0V0h31.3ZM3.8,27.7h11.4v-15.2l12.2,10.8V3.8H3.8s0,23.9,0,23.9Z"
+      />
+    </svg>
+  );
+};

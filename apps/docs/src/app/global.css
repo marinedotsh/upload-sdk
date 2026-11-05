@@ -18,13 +18,18 @@ p.inline-flex.items-center.gap-2.mb-1.px-2.mt-6 {
 }
 
 aside#nd-sidebar {
-  background-color: #050505;
+  background-color: var(--color-fd-background);
 }
 
 aside#nd-sidebar a[data-active="true"] {
+  color: #0070c9;
+  background-color: #e6f3ff;
+  font-weight: 500;
+}
+
+html.dark aside#nd-sidebar a[data-active="true"] {
   color: #0087f5;
   background-color: #04172b;
-  font-weight: 500;
 }
 
 @layer components {

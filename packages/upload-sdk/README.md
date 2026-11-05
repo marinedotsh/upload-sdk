@@ -1,6 +1,6 @@
 # @marinedotsh/upload-sdk
 
-Generate provider-agnostic signed upload targets for S3 and ImageKit.
+Generate provider-agnostic signed upload targets for S3, ImageKit, and Neon Object Storage.
 
 ## Installation
 
@@ -56,9 +56,9 @@ const preparedUpload = await uploader.prepareUpload("avatar", {
 
 `expiresIn` controls how long the generated provider upload target remains valid.
 `limits.maxFileSize` and `accept` rules are checked before a provider signature is generated.
-Providers also enforce the signed upload request where supported: S3 signs the generated key,
-content type, and size range into its POST policy, while ImageKit receives a V2 upload JWT with a
-`checks` expression for size and MIME type validation.
+Providers also enforce the signed upload request where supported: S3 and Neon Object Storage sign
+the generated key, content type, and size range into their POST policy, while ImageKit receives a
+V2 upload JWT with a `checks` expression for size and MIME type validation.
 
 ## Browser uploads
 
@@ -81,7 +81,7 @@ the provider accepts the upload.
 
 ## Large S3 uploads
 
-AWS S3 storage profiles also support chunked multipart uploads:
+AWS S3 and Neon Object Storage storage profiles also support chunked multipart uploads:
 
 ```ts
 const multipartUpload = await uploader.createMultipartUpload("video", {
@@ -129,6 +129,7 @@ ImageKit does not currently expose the same S3-style multipart upload flow throu
 
 - `awsS3`
 - `imageKit`
+- `neonStorage`
 
 ## License
 

@@ -19,7 +19,11 @@ import {
   uploadFile,
   uploadMultipartParts,
 } from "@marinedotsh/upload-sdk";
-import { awsS3, imageKit } from "@marinedotsh/upload-sdk/providers";
+import {
+  awsS3,
+  imageKit,
+  neonStorage,
+} from "@marinedotsh/upload-sdk/providers";
 ```
 
 ## `defineStorageProfiles()`
@@ -491,6 +495,59 @@ const provider = imageKit({
 Keep the private key in server-only code.
 
 See [ImageKit](/docs/providers/imagekit).
+
+## `neonStorage()`
+
+Creates a Neon Object Storage provider.
+
+```ts
+function neonStorage(
+  config: NeonStorageConfig,
+): StorageProvider
+```
+
+### Configuration
+
+```ts
+type NeonStorageConfig = {
+  bucket: string;
+  endpoint: string;
+  region: string;
+  credentials: {
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
+};
+```
+
+| Property                      | Required | Description                                          |
+| ----------------------------- | -------- | ---------------------------------------------------- |
+| `bucket`                      | Yes      | Bucket name on the branch                            |
+| `endpoint`                    | Yes      | Branch storage endpoint (`AWS_ENDPOINT_URL_S3`)      |
+| `region`                      | Yes      | Object storage region used for signing               |
+| `credentials.accessKeyId`     | Yes      | Neon credential `token_id`                           |
+| `credentials.secretAccessKey` | Yes      | Neon credential `s3_secret_access_key`               |
+
+`endpoint` must be an `https` URL. The provider uses path-style addressing, which Neon requires.
+
+### Example
+
+```ts
+const provider = neonStorage({
+  bucket: process.env.NEON_STORAGE_BUCKET!,
+  endpoint: process.env.AWS_ENDPOINT_URL_S3!,
+  region: process.env.AWS_REGION!,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey:
+      process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+});
+```
+
+Keep Neon credentials in server-only code.
+
+See [Neon Object Storage](/docs/providers/neon-object-storage).
 
 ## `isUploadSDKError()`
 

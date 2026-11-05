@@ -2,5 +2,5 @@
   "title": "Providers",
   "collapsible": true,
   "defaultOpen": false,
-  "pages": ["overview", "aws-s3", "imagekit"]
+  "pages": ["overview", "aws-s3", "imagekit", "neon-object-storage"]
 }

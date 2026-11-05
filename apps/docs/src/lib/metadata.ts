@@ -6,9 +6,9 @@ export const repositoryUrl = `https://github.com/${gitConfig.user}/${gitConfig.r
 export const npmPackageUrl = `https://www.npmjs.com/package/${packageName}`;
 
 export const siteTitle =
-  "Upload SDK - TypeScript Direct Uploads for S3 and ImageKit";
+  "Upload SDK - TypeScript Direct Uploads for S3, ImageKit, and Neon";
 export const siteDescription =
-  "TypeScript SDK for secure direct browser uploads to AWS S3 and ImageKit, with typed asset rules, validation, signed POST targets, and S3 multipart uploads.";
+  "TypeScript SDK for secure direct browser uploads to AWS S3, ImageKit, and Neon Object Storage, with typed asset rules, validation, signed POST targets, and S3 multipart uploads.";
 
 export const siteKeywords = [
   "upload sdk",
@@ -26,6 +26,8 @@ export const siteKeywords = [
   "chunked uploads",
   "ImageKit uploads",
   "ImageKit upload JWT",
+  "Neon Object Storage uploads",
+  "Neon branch storage",
   "file upload validation",
   "typed upload config",
   "asset upload rules",
@@ -66,7 +68,7 @@ export function createPageTitle(title: string) {
 export function createPageDescription(title: string, description?: string) {
   return (
     description ??
-    `${title} documentation for ${packageName}, a TypeScript SDK for direct uploads to AWS S3 and ImageKit.`
+    `${title} documentation for ${packageName}, a TypeScript SDK for direct uploads to AWS S3, ImageKit, and Neon Object Storage.`
   );
 }
 
@@ -220,6 +222,7 @@ export const structuredData = {
         "Provider-agnostic upload signing",
         "S3 presigned POST uploads",
         "ImageKit upload JWTs",
+        "Neon Object Storage uploads",
         "File upload validation",
         "Typed asset upload configuration",
         "Large S3 multipart uploads",

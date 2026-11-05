@@ -15,6 +15,7 @@ Upload SDK currently supports:
 
 * AWS S3
 * ImageKit
+* Neon Object Storage
 
 <Note>
 Support for Cloudflare R2 is planned for a future release.
@@ -24,7 +25,7 @@ Other storage providers are not currently supported.
 
 ## Upload strategies
 
-The SDK prepares multipart form uploads for AWS S3 and ImageKit:
+The SDK prepares multipart form uploads for AWS S3, ImageKit, and Neon Object Storage:
 
 ```ts
 {
@@ -33,7 +34,7 @@ The SDK prepares multipart form uploads for AWS S3 and ImageKit:
 }
 ```
 
-AWS S3 also supports provider multipart-upload sessions for large files:
+AWS S3 and Neon Object Storage also support provider multipart-upload sessions for large files:
 
 ```ts
 {
@@ -49,7 +50,7 @@ It does not currently support:
 
 For regular prepared uploads, the client submits the returned fields and file using `FormData`.
 
-For S3 large-file uploads, the client uploads signed part URLs and your server completes the multipart upload.
+For S3 and Neon large-file uploads, the client uploads signed part URLs and your server completes the multipart upload.
 
 ## Client-reported file information
 
@@ -169,11 +170,12 @@ These workflows depend on your application and storage setup.
 
 ## Provider behavior differs
 
-The prepared-upload response has the same overall shape across AWS S3 and ImageKit, but each provider supports different signed constraints and fields.
+The prepared-upload response has the same overall shape across every provider, but each provider supports different signed constraints and fields.
 
 For example:
 
-* AWS S3 can include a signed content-length condition.
+* AWS S3 and Neon Object Storage can include a signed content-length condition.
+* Neon Object Storage limits single-request uploads to 5 GiB and multipart uploads to 10 GiB.
 * ImageKit uses its own token, checks, and metadata fields.
 * Expiration limits differ between providers.
 * Provider upload responses may have different bodies.

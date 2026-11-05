@@ -1,7 +1,7 @@
 ---
 
 title: Providers Overview
-description: Understand how Upload SDK prepares uploads for AWS S3 and ImageKit.
+description: Understand how Upload SDK prepares uploads for AWS S3, ImageKit, and Neon Object Storage.
 
 ---
 
@@ -13,6 +13,7 @@ Upload SDK currently includes providers for:
 
 * [AWS S3](/docs/providers/aws-s3)
 * [ImageKit](/docs/providers/imagekit)
+* [Neon Object Storage](/docs/providers/neon-object-storage)
 
 <Note>
 Support for __Cloudflare R2__ is planned for a future release.
@@ -78,11 +79,21 @@ The returned fields can include:
 * Metadata
 * Overwrite settings
 
+### Neon Object Storage
+
+Neon Object Storage is S3-compatible, so it uses the same signed multipart `POST` policy as AWS S3.
+
+The differences are in addressing:
+
+* The upload URL is your branch storage endpoint followed by the bucket name
+* Credentials are Neon credentials with the `storage:write` scope
+* Each Neon branch has its own view of the bucket
+
 The exact configuration and returned fields are covered in each provider guide.
 
 ## What stays the same
 
-Your application uses the same SDK flow with both providers:
+Your application uses the same SDK flow with every provider:
 
 ```ts
 const preparedUpload = await uploader.prepareUpload(
@@ -119,7 +130,7 @@ Provider configuration contains private credentials used to sign uploads.
 
 Keep it in server-only code.
 
-The client receives short-lived signed upload instructions, not your AWS or ImageKit private credentials.
+The client receives short-lived signed upload instructions, not your AWS, ImageKit, or Neon private credentials.
 
 ## Next steps
 
@@ -128,6 +139,9 @@ The client receives short-lived signed upload instructions, not your AWS or Imag
 
 * [ImageKit:](/docs/providers/imagekit)
   Configure ImageKit and understand its signed upload fields.
+
+* [Neon Object Storage:](/docs/providers/neon-object-storage)
+  Configure a Neon branch bucket and understand its signed POST fields.
 
 * [Storage Profiles:](/docs/core-concepts/storage-profiles)
   Organize provider configurations by name.

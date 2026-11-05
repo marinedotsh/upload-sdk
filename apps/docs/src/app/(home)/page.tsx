@@ -1,6 +1,6 @@
 import { ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
-import { AwsS3Logo, ImageKitLogo } from "@/components/logo";
+import { AwsS3Logo, ImageKitLogo, NeonLogo } from "@/components/logo";
 import { CodeExample } from "./code-example";
 import { InstallSection } from "./install";
 
@@ -37,8 +37,8 @@ function Hero() {
         </h1>
 
         <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-fd-muted-foreground sm:mt-6 sm:text-lg sm:leading-8 lg:text-[19px]">
-          Validate files and prepare secure direct uploads to AWS S3 or ImageKit
-          using one TypeScript SDK.
+          Validate files and prepare secure direct uploads to AWS S3, ImageKit,
+          or Neon Object Storage using one TypeScript SDK.
         </p>
 
         <div className="mt-9 flex w-full max-w-sm flex-col gap-3 sm:mt-12 sm:w-auto sm:max-w-none sm:flex-row">
@@ -84,7 +84,17 @@ const providers = [
     icon: <ImageKitLogo size={24} className="rounded-sm" />,
     href: "/docs/providers/imagekit",
   },
+  {
+    name: "Neon",
+    description:
+      "Validate files and prepare signed direct uploads to a Neon Object Storage bucket.",
+    icon: <NeonLogo size={22} />,
+    href: "/docs/providers/neon-object-storage",
+  },
 ];
+
+const providerCellClassName =
+  "min-w-0 border-b p-5 last:border-b-0 sm:p-6 md:odd:border-r md:nth-[n+3]:border-b-0 lg:border-r lg:border-b-0 lg:p-8 lg:last:border-r-0";
 
 export function SupportedProviders() {
   return (
@@ -98,16 +108,16 @@ export function SupportedProviders() {
         </h2>
 
         <p className="mt-3 max-w-xl text-pretty text-base leading-7 text-fd-muted-foreground sm:mt-4 sm:text-lg">
-          Use the same upload flow with AWS S3 or ImageKit.
+          Use the same upload flow with AWS S3, ImageKit, or Neon.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 divide-y border-t md:grid-cols-2 md:divide-x md:divide-y-0 lg:grid-cols-3">
+      <div className="grid grid-cols-1 border-t md:grid-cols-2 lg:grid-cols-4">
         {providers.map((provider) => (
           <Link
             key={provider.name}
             href={provider.href}
-            className="group min-w-0 p-5 transition-colors hover:bg-fd-muted/40 sm:p-6 lg:p-8"
+            className={`group transition-colors hover:bg-fd-muted/40 ${providerCellClassName}`}
           >
             <div className="flex size-10 items-center justify-center rounded-md border bg-neutral-950 text-white shadow-sm sm:size-12">
               {provider.icon}
@@ -128,7 +138,7 @@ export function SupportedProviders() {
           </Link>
         ))}
 
-        <div className="min-w-0 p-5 sm:p-6 md:col-span-2 md:border-t lg:col-span-1 lg:border-t-0 lg:p-8">
+        <div className={providerCellClassName}>
           <div className="flex size-10 items-center justify-center rounded-md border bg-fd-muted/50 text-fd-muted-foreground sm:size-12">
             <Plus className="size-5 sm:size-6" />
           </div>

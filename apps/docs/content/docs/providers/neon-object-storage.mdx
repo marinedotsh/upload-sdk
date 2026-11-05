@@ -1,0 +1,371 @@
+---
+
+title: Neon Object Storage
+description: Configure Neon Object Storage and prepare signed browser uploads to a branch bucket.
+
+---
+
+The Neon Object Storage provider creates short-lived signed `POST` uploads for a bucket on a Neon branch.
+
+[Neon Object Storage](https://neon.com/docs/storage/overview) is S3-compatible object storage built into your Neon project. Buckets branch with your database, so a preview branch gets its own copy-on-write view of uploaded files.
+
+The client sends the file directly to Neon. Your Neon storage credential remains on the server.
+
+## Configure the provider
+
+Import `neonStorage()` and add it to a storage profile:
+
+```ts
+import { defineStorageProfiles } from "@marinedotsh/upload-sdk";
+import { neonStorage } from "@marinedotsh/upload-sdk/providers";
+
+const storageProfiles = defineStorageProfiles({
+  uploads: neonStorage({
+    bucket: process.env.NEON_STORAGE_BUCKET!,
+    endpoint: process.env.AWS_ENDPOINT_URL_S3!,
+    region: process.env.AWS_REGION!,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+  }),
+});
+```
+
+The provider requires:
+
+| Option                        | Description                                                           |
+| ----------------------------- | --------------------------------------------------------------------- |
+| `bucket`                      | The bucket on the branch that receives uploads                        |
+| `endpoint`                    | The branch storage endpoint, for example `https://br-....neon.tech`   |
+| `region`                      | The object storage region used for signing, for example `us-east-2`   |
+| `credentials.accessKeyId`     | The Neon credential `token_id` (`nak_live_...`)                       |
+| `credentials.secretAccessKey` | The Neon credential `s3_secret_access_key` (`nsk_live_...`)           |
+
+The profile name, `uploads`, is chosen by your application.
+
+See [Storage Profiles](/docs/core-concepts/storage-profiles) for profile naming and multiple storage destinations.
+
+<Note>
+Neon Object Storage only supports path-style addressing. The provider always signs requests as `{endpoint}/{bucket}/{key}`, so there is no `forcePathStyle` option to set.
+</Note>
+
+## Create a bucket
+
+Create a bucket on the branch your application uses. With the [Neon CLI](https://neon.com/docs/cli):
+
+```bash
+neon buckets create user-uploads
+```
+
+Buckets are `private` by default. Use `--access-level public_read` when uploaded files should be readable without a credential:
+
+```bash
+neon buckets create public-assets --access-level public_read
+```
+
+You can also create buckets from the **Object storage** tab in the Neon Console, or with the Neon API. See [Buckets](https://neon.com/docs/storage/buckets).
+
+## Create a credential
+
+Uploads are signed with a Neon credential that has the `storage:write` scope:
+
+```bash
+neon credentials create --scope storage:write --name upload-sdk
+```
+
+The credential maps directly to S3 access keys:
+
+| Neon credential field  | Provider option               |
+| ---------------------- | ----------------------------- |
+| `token_id`             | `credentials.accessKeyId`     |
+| `s3_secret_access_key` | `credentials.secretAccessKey` |
+
+The secret is printed when the credential is created, so store it right away. You can reveal the
+secret later with `neon credentials reveal <token_id>`. Credentials created before secret reveal
+was supported may need to be rotated instead.
+
+Credentials are bound to the branch they were created on and are also valid on every branch descended from it. A credential created on `main` can sign uploads for preview branches forked from `main`, but not for an unrelated branch.
+
+See [Object storage authentication](https://neon.com/docs/storage/authentication).
+
+## Environment variables
+
+Store the provider configuration in server-side environment variables:
+
+```bash
+NEON_STORAGE_BUCKET=
+AWS_ENDPOINT_URL_S3=
+AWS_REGION=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+```
+
+For local development, `neon env pull` writes `AWS_ENDPOINT_URL_S3`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` for the linked branch:
+
+```bash
+neon env pull --file .env.local
+```
+
+Inside [Neon Functions](https://neon.com/docs/compute/functions/environment-variables), the same four variables are injected automatically for the function's branch.
+
+<Warning>
+Never expose Neon storage credentials in browser code or public environment variables.
+</Warning>
+
+## Bucket CORS
+
+Because the browser uploads directly to Neon, the bucket must allow requests from your application.
+
+Neon Object Storage supports the S3 `PutBucketCors` operation, so you can apply a CORS configuration with any S3 client pointed at your branch endpoint:
+
+```json
+{
+  "CORSRules": [
+    {
+      "AllowedOrigins": [
+        "http://localhost:3000",
+        "https://example.com"
+      ],
+      "AllowedMethods": [
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "AllowedHeaders": [
+        "*"
+      ],
+      "ExposeHeaders": [
+        "ETag"
+      ],
+      "MaxAgeSeconds": 3600
+    }
+  ]
+}
+```
+
+Save it as `cors.json` and apply it with the AWS CLI:
+
+```bash
+aws s3api put-bucket-cors \
+  --bucket user-uploads \
+  --cors-configuration file://cors.json \
+  --endpoint-url "$AWS_ENDPOINT_URL_S3"
+```
+
+Replace `https://example.com` with your application's origin.
+
+Avoid using `"*"` for `AllowedOrigins` in production unless public cross-origin access is intentional.
+
+`PUT` and exposed `ETag` headers are required when using [large file uploads](#large-file-uploads).
+
+## How Neon uploads are signed
+
+Neon Object Storage accepts the same SigV4 browser form uploads as S3.
+
+The provider creates a presigned multipart `POST` policy. Depending on the selected upload asset, the policy can include conditions for:
+
+* The generated object key
+* The declared content type
+* The maximum upload size
+* The expiration time
+* Object metadata
+
+Signing happens locally on your server. The provider does not call Neon while preparing a single upload.
+
+The client must submit the returned form fields exactly as they were prepared.
+
+Changing a signed field can cause Neon to reject the request.
+
+## Prepared upload result
+
+A Neon prepared upload can look like this:
+
+```ts
+{
+  strategy: "multipart",
+  method: "POST",
+  url: "https://br-cool-darkness-a1b2c3d4.storage.c-1.us-east-2.aws.neon.tech/user-uploads",
+  headers: {},
+  fields: {
+    key: "avatars/profile-550e8400-e29b-41d4-a716-446655440000.png",
+    "Content-Type": "image/png",
+    "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+    "X-Amz-Credential": "...",
+    "X-Amz-Date": "...",
+    Policy: "...",
+    "X-Amz-Signature": "..."
+  },
+  key: "avatars/profile-550e8400-e29b-41d4-a716-446655440000.png",
+  expiresAt: "2026-07-21T12:00:00.000Z"
+}
+```
+
+The `url` is the branch endpoint followed by the bucket name.
+
+Do not manually create or modify these fields in browser code.
+
+## Uploading to Neon
+
+Add every returned field to `FormData`, then append the file:
+
+```ts
+const formData = new FormData();
+
+for (const [name, value] of Object.entries(
+  preparedUpload.fields,
+)) {
+  formData.append(name, value);
+}
+
+formData.append("file", file);
+
+const response = await fetch(preparedUpload.url, {
+  method: preparedUpload.method,
+  headers: preparedUpload.headers,
+  body: formData,
+});
+
+if (!response.ok) {
+  throw new Error("Neon Object Storage rejected the upload.");
+}
+```
+
+Append the file after the signed fields.
+
+<Warning>
+Do not manually set the multipart `Content-Type` header. The browser adds the required boundary automatically.
+</Warning>
+
+You can also use the SDK's `uploadFile()` helper, which does the same thing with progress events. See [Browser Uploads](/docs/guides/browser-uploads) for the complete client flow.
+
+## Reading uploaded files
+
+The upload response does not return a public URL. Store the returned `key` in your database, then read the object based on the bucket's access level:
+
+* `public_read` buckets serve objects at `{endpoint}/{bucket}/{key}` without a credential.
+* `private` buckets require a credential. Generate a presigned `GET` URL on the server with an S3 client, or use the [Files SDK](https://files-sdk.dev).
+
+Because objects branch with your database, a key stored in a branch's Postgres tables resolves to the same branch's view of the bucket.
+
+## Large file uploads
+
+Neon storage profiles support chunked multipart upload sessions, using the same flow as S3:
+
+* `createMultipartUpload()` starts the upload session.
+* `prepareMultipartUploadParts()` signs each part URL.
+* `uploadMultipartParts()` uploads chunks from the browser.
+* `completeMultipartUpload()` asks Neon to assemble the object.
+* `abortMultipartUpload()` cleans up failed sessions.
+
+```ts
+const session = await uploader.createMultipartUpload("video", {
+  filename: "demo.mp4",
+  contentType: "video/mp4",
+  size: file.size,
+});
+```
+
+Every part except the final part must be at least 5 MiB, and an upload can have at most 10,000 parts.
+
+See [S3 Large File Uploads](/docs/guides/s3-large-file-uploads) for the complete server and browser flow. Replace `awsS3()` with `neonStorage()` in the storage profile; the rest of the guide is unchanged.
+
+<Note>
+Neon Object Storage limits single-request uploads to 5 GiB and multipart uploads to 10 GiB. Set
+`limits.maxFileSize` at or below the limit for the upload flow you use, and route files larger than
+5 GiB through multipart upload.
+</Note>
+
+## Branches
+
+Each Neon branch has its own storage endpoint and its own view of every bucket.
+
+* Uploads to a child branch are only visible on that branch and its descendants.
+* The parent branch never sees objects uploaded to a child branch.
+* A new branch inherits the parent's objects at the moment it was created, without copying data.
+
+To upload to a preview branch, point `endpoint` at that branch's storage endpoint. A credential created on the parent branch also works on the child.
+
+## Upload expiration
+
+The asset's `expiresIn` setting controls how long the prepared upload remains valid.
+
+```ts
+expiresIn: {
+  value: 5,
+  unit: "minutes",
+}
+```
+
+When `expiresIn` is not configured, the provider uses 5 minutes.
+
+The resolved expiration must be an integer from 1 second through 604,800 seconds (7 days).
+Values outside that range are rejected while preparing the upload.
+
+After the signed policy expires, Neon rejects the upload.
+
+## Upload-size limits
+
+When an asset defines `limits.maxFileSize`, the SDK checks the size reported by the client before signing and adds a content-length condition to the POST policy:
+
+```ts
+limits: {
+  maxFileSize: {
+    value: 2,
+    unit: "MB",
+  },
+}
+```
+
+<Warning>
+Preparation-time validation still uses the size reported by the client. Upload SDK does not inspect the actual file contents.
+</Warning>
+
+## Common errors
+
+### `403 InvalidAccessKeyId`
+
+`credentials.accessKeyId` is wrong or the credential was revoked. Use the credential's `token_id`.
+
+### `403 SignatureDoesNotMatch`
+
+`credentials.secretAccessKey` is wrong, or `region` does not match the region in the branch endpoint.
+
+Reveal the secret with `neon credentials reveal <token_id>`. If the credential was created before
+secret reveal was supported, rotate it with `neon credentials rotate <token_id>` instead.
+
+### `403 AccessDenied`
+
+The credential lacks the `storage:write` scope, or the endpoint belongs to a branch outside the credential's lineage.
+
+### Bucket not found
+
+The bucket does not exist on the branch behind `endpoint`. Buckets created on a child branch are not visible to the parent.
+
+### Browser request blocked by CORS
+
+Make sure the bucket's CORS rules allow your application's origin, the `POST` method, and the required request headers.
+
+### `503 SlowDown`
+
+Neon throttled the request during heavy use. Back off and retry.
+
+### Signed fields were changed
+
+Do not rename, remove, or replace fields returned in `preparedUpload.fields`.
+
+The submitted form must match the signed policy.
+
+## Next steps
+
+* [Browser Uploads:](/docs/guides/browser-uploads)
+  Send the prepared multipart form from the client.
+
+* [S3 Large File Uploads:](/docs/guides/s3-large-file-uploads)
+  Split large files into signed parts. The same flow works with Neon.
+
+* [Next.js Direct Uploads:](/docs/guides/next-js-direct-uploads)
+  Prepare uploads behind a Next.js route handler.
+
+* [Neon Object Storage docs:](https://neon.com/docs/storage/overview)
+  Buckets, credentials, branching, and S3 compatibility.

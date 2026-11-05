@@ -185,7 +185,7 @@ export async function GET(
               fontWeight: 800,
             }}
           >
-            S3 + ImageKit
+            S3 + ImageKit + Neon
           </div>
         </div>
       </div>

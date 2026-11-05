@@ -1,6 +1,6 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import Image from "next/image";
-import { appName, gitConfig } from "./shared";
+import { gitConfig } from "./shared";
 
 function BrandTitle() {
   return (
@@ -12,7 +12,9 @@ function BrandTitle() {
         height={20}
         aria-hidden="true"
       />
-      <span>{appName}</span>
+      <span className="truncate text-base lowercase font-medium leading-none">
+        {gitConfig.repo}
+      </span>
     </span>
   );
 }

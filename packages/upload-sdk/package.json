@@ -1,13 +1,15 @@
 {
   "name": "@marinedotsh/upload-sdk",
   "version": "1.0.0",
-  "description": "Generate provider-agnostic signed upload targets for S3 and ImageKit.",
+  "description": "Generate provider-agnostic signed upload targets for S3, ImageKit, and Neon Object Storage.",
   "keywords": [
     "upload",
     "uploads",
     "sdk",
     "s3",
     "imagekit",
+    "neon",
+    "object-storage",
     "signed-upload",
     "presigned-url"
   ],

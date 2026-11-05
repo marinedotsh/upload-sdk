@@ -78,16 +78,16 @@ A prepared upload is permission to attempt an upload. It is not proof that the f
 
 ## Provider tradeoffs
 
-AWS S3 and ImageKit use the same SDK preparation flow, but their provider behavior differs.
+AWS S3, ImageKit, and Neon Object Storage use the same SDK preparation flow, but their provider behavior differs.
 
-| Concern | AWS S3 | ImageKit |
-| --- | --- | --- |
-| Signing model | Presigned POST policy | Signed upload token |
-| Upload endpoint | Bucket endpoint | ImageKit upload endpoint |
-| Size constraint | Can be included in the POST policy | Sent through ImageKit checks |
-| Metadata | Object metadata | Custom metadata |
-| Expiration limit | Up to 7 days | Up to 1 hour |
-| Post-upload work | Application-owned | Application-owned |
+| Concern | AWS S3 | ImageKit | Neon Object Storage |
+| --- | --- | --- | --- |
+| Signing model | Presigned POST policy | Signed upload token | Presigned POST policy |
+| Upload endpoint | Bucket endpoint | ImageKit upload endpoint | Branch endpoint + bucket path |
+| Size constraint | Can be included in the POST policy | Sent through ImageKit checks | Can be included in the POST policy |
+| Metadata | Object metadata | Custom metadata | Object metadata |
+| Expiration limit | Up to 7 days | Up to 1 hour | Up to 7 days |
+| Post-upload work | Application-owned | Application-owned | Application-owned |
 
 Choose the provider based on storage, delivery, transformation, and operations requirements. Upload SDK keeps the preparation contract consistent.
 

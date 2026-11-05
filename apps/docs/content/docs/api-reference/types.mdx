@@ -40,6 +40,7 @@ import type {
 import type {
   AwsS3Config,
   ImageKitConfig,
+  NeonStorageConfig,
 } from "@marinedotsh/upload-sdk/providers";
 ```
 
@@ -456,6 +457,46 @@ const config: ImageKitConfig = {
 
 See [ImageKit](/docs/providers/imagekit).
 
+## `NeonStorageConfig`
+
+Configuration accepted by `neonStorage()`.
+
+```ts
+type NeonStorageConfig = {
+  bucket: string;
+  endpoint: string;
+  region: string;
+
+  credentials: {
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
+};
+```
+
+| Property                      | Required | Description                                     |
+| ----------------------------- | -------- | ----------------------------------------------- |
+| `bucket`                      | Yes      | Bucket name on the branch                       |
+| `endpoint`                    | Yes      | Branch storage endpoint (`AWS_ENDPOINT_URL_S3`) |
+| `region`                      | Yes      | Object storage region used for signing          |
+| `credentials.accessKeyId`     | Yes      | Neon credential `token_id`                      |
+| `credentials.secretAccessKey` | Yes      | Neon credential `s3_secret_access_key`          |
+
+```ts
+const config: NeonStorageConfig = {
+  bucket: process.env.NEON_STORAGE_BUCKET!,
+  endpoint: process.env.AWS_ENDPOINT_URL_S3!,
+  region: process.env.AWS_REGION!,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey:
+      process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+};
+```
+
+See [Neon Object Storage](/docs/providers/neon-object-storage).
+
 ## `UploadSDKErrorCode`
 
 The machine-readable codes used by `UploadSDKError`.
@@ -533,7 +574,7 @@ type StorageProvider = {
 };
 ```
 
-The built-in `awsS3()` and `imageKit()` factories return this shape.
+The built-in `awsS3()`, `imageKit()`, and `neonStorage()` factories return this shape.
 
 ## Next steps
 
