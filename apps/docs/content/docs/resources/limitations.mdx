@@ -175,7 +175,7 @@ The prepared-upload response has the same overall shape across every provider, b
 For example:
 
 * AWS S3 and Neon Object Storage can include a signed content-length condition.
-* Neon Object Storage limits objects to 5 GiB.
+* Neon Object Storage limits single-request uploads to 5 GiB and multipart uploads to 10 GiB.
 * ImageKit uses its own token, checks, and metadata fields.
 * Expiration limits differ between providers.
 * Provider upload responses may have different bodies.

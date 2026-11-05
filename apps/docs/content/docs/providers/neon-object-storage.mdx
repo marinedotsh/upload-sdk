@@ -81,7 +81,9 @@ The credential maps directly to S3 access keys:
 | `token_id`             | `credentials.accessKeyId`     |
 | `s3_secret_access_key` | `credentials.secretAccessKey` |
 
-The secret is shown once, so store it right away.
+The secret is printed when the credential is created, so store it right away. You can reveal the
+secret later with `neon credentials reveal <token_id>`. Credentials created before secret reveal
+was supported may need to be rotated instead.
 
 Credentials are bound to the branch they were created on and are also valid on every branch descended from it. A credential created on `main` can sign uploads for preview branches forked from `main`, but not for an unrelated branch.
 
@@ -269,7 +271,9 @@ Every part except the final part must be at least 5 MiB, and an upload can have 
 See [S3 Large File Uploads](/docs/guides/s3-large-file-uploads) for the complete server and browser flow. Replace `awsS3()` with `neonStorage()` in the storage profile; the rest of the guide is unchanged.
 
 <Note>
-Neon Object Storage currently limits objects to 5 GiB, whether they are uploaded in a single request or with multipart upload. Set `limits.maxFileSize` at or below that value.
+Neon Object Storage limits single-request uploads to 5 GiB and multipart uploads to 10 GiB. Set
+`limits.maxFileSize` at or below the limit for the upload flow you use, and route files larger than
+5 GiB through multipart upload.
 </Note>
 
 ## Branches
@@ -327,7 +331,8 @@ Preparation-time validation still uses the size reported by the client. Upload S
 
 `credentials.secretAccessKey` is wrong, or `region` does not match the region in the branch endpoint.
 
-Neon secrets cannot be retrieved after creation. Rotate the credential with `neon credentials rotate <token_id>` if it is lost.
+Reveal the secret with `neon credentials reveal <token_id>`. If the credential was created before
+secret reveal was supported, rotate it with `neon credentials rotate <token_id>` instead.
 
 ### `403 AccessDenied`
 
